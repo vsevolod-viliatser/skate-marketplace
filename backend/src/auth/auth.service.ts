@@ -4,10 +4,16 @@ import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from '../user/dto/create-user.dto';
 import { UserService } from '../user/user.service';
 
-interface User {
+interface UserWithPassword {
   id: string;
   email: string;
   password: string;
+  role?: string;
+}
+
+interface UserWithoutPassword {
+  id: string;
+  email: string;
   role?: string;
 }
 
@@ -18,18 +24,19 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async validateUser(email: string, password: string) {
+  async validateUser(
+    email: string,
+    password: string,
+  ): Promise<UserWithoutPassword | null> {
     try {
       const users = await this.userService.findAll();
-
-      const user = users.find((u) => u.email === email);
+      const user = users.find((u: UserWithPassword) => u.email === email);
 
       if (user && (await this.comparePasswords(password, user.password))) {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { password, ...result } = user;
+        const { password: _, ...result } = user;
         return result;
       }
-
       return null;
     } catch (error) {
       console.error(error);
@@ -37,7 +44,7 @@ export class AuthService {
     }
   }
 
-  async login(user: User) {
+  async login(user: UserWithoutPassword) {
     const payload = {
       email: user.email,
       sub: user.id,
@@ -64,7 +71,9 @@ export class AuthService {
     const user = await this.userService.createUser(userData);
 
     if (user) {
-      return this.login(user as User);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { password: _, ...userWithoutPassword } = user;
+      return this.login(userWithoutPassword);
     }
 
     throw new UnauthorizedException('Registration failed');
