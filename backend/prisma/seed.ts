@@ -8,11 +8,11 @@ async function main() {
 
   try {
     // Clear existing data (optional - uncomment if you want to start fresh)
-    // await prisma.orderItem.deleteMany();
-    // await prisma.order.deleteMany();
-    // await prisma.product.deleteMany();
-    // await prisma.category.deleteMany();
-    // await prisma.user.deleteMany();
+    await prisma.orderItem.deleteMany();
+    await prisma.order.deleteMany();
+    await prisma.product.deleteMany();
+    await prisma.category.deleteMany();
+    await prisma.user.deleteMany();
 
     // Create categories
     const categories = await Promise.all([

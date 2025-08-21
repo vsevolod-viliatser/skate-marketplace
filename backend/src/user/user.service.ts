@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { User } from '@prisma/client';
+import * as argon2 from 'argon2';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 
@@ -12,8 +13,14 @@ export class UserService {
   }
 
   async createUser(createUserDto: CreateUserDto): Promise<User> {
+    // Hash the password before storing
+    const hashedPassword = await this.hashPassword(createUserDto.password);
+
     return this.prisma.user.create({
-      data: createUserDto,
+      data: {
+        email: createUserDto.email,
+        password: hashedPassword,
+      },
     });
   }
 
@@ -40,6 +47,15 @@ export class UserService {
 
     return this.prisma.user.delete({
       where: { id },
+    });
+  }
+
+  private async hashPassword(password: string): Promise<string> {
+    return argon2.hash(password, {
+      type: argon2.argon2id,
+      memoryCost: 2 ** 16,
+      timeCost: 3,
+      parallelism: 1,
     });
   }
 }

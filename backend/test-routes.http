@@ -1,0 +1,265 @@
+### 🧪 **Complete Route Testing for Skate Marketplace**
+### Base URL: http://localhost:3001
+
+### ========================================
+### 🔐 **AUTHENTICATION ROUTES**
+### ========================================
+
+### 1. Register New User
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "testuser@example.com",
+  "password": "password123"
+}
+
+### 2. Login with New User
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "testuser@example.com",
+  "password": "password123"
+}
+
+### 3. Login with Admin User
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@skateshop.com",
+  "password": "password123"
+}
+
+### 4. Get Profile (requires auth)
+GET {{baseUrl}}/auth/profile
+Authorization: Bearer {{authToken}}
+
+### ========================================
+### 👥 **USER ROUTES**
+### ========================================
+
+### 5. Get All Users (Admin only)
+GET {{baseUrl}}/users
+Authorization: Bearer {{adminToken}}
+
+### 6. Create New User (Admin only)
+POST {{baseUrl}}/users
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "email": "newuser@example.com",
+  "password": "password123"
+}
+
+### 7. Get User by ID
+GET {{baseUrl}}/users/{{userId}}
+Authorization: Bearer {{authToken}}
+
+### 8. Delete User (Admin only)
+DELETE {{baseUrl}}/users/{{userId}}
+Authorization: Bearer {{adminToken}}
+
+### ========================================
+### 🛹 **PRODUCT ROUTES**
+### ========================================
+
+### 9. Get All Products (with pagination)
+GET {{baseUrl}}/products?page=1&limit=10
+Authorization: Bearer {{authToken}}
+
+### 10. Get Product by ID
+GET {{baseUrl}}/products/{{productId}}
+Authorization: Bearer {{authToken}}
+
+### 11. Create Product (Admin only)
+POST {{baseUrl}}/products
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "title": "Premium Skateboard Deck",
+  "description": "Professional 8.5\" deck with custom graphics",
+  "price": 79.99,
+  "imageUrl": "https://images.unsplash.com/photo-1572776685600-cf276d3c3b32?w=400",
+  "categoryId": "{{categoryId}}"
+}
+
+### 12. Update Product (Admin only)
+PUT {{baseUrl}}/products/{{productId}}
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "title": "Updated Premium Skateboard Deck",
+  "description": "Updated description with new features",
+  "price": 89.99,
+  "imageUrl": "https://images.unsplash.com/photo-1572776685600-cf276d3c3b32?w=400"
+}
+
+### 13. Delete Product (Admin only)
+DELETE {{baseUrl}}/products/{{productId}}
+Authorization: Bearer {{adminToken}}
+
+### ========================================
+### 📂 **CATEGORY ROUTES**
+### ========================================
+
+### 14. Get All Categories
+GET {{baseUrl}}/categories
+Authorization: Bearer {{authToken}}
+
+### 15. Get Category by ID
+GET {{baseUrl}}/categories/{{categoryId}}
+Authorization: Bearer {{authToken}}
+
+### 16. Create Category (Admin only)
+POST {{baseUrl}}/categories
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "name": "Custom Decks",
+  "description": "Custom designed skateboard decks",
+  "imageUrl": "https://images.unsplash.com/photo-1572776685600-cf276d3c3b32?w=400"
+}
+
+### 17. Update Category (Admin only)
+PUT {{baseUrl}}/categories/{{categoryId}}
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "name": "Premium Custom Decks",
+  "description": "Updated description for premium custom decks"
+}
+
+### 18. Delete Category (Admin only)
+DELETE {{baseUrl}}/categories/{{categoryId}}
+Authorization: Bearer {{adminToken}}
+
+### ========================================
+### 📦 **ORDER ROUTES**
+### ========================================
+
+### 19. Get All Orders (Admin only)
+GET {{baseUrl}}/orders
+Authorization: Bearer {{adminToken}}
+
+### 20. Get My Orders (User's own orders)
+GET {{baseUrl}}/orders/my-orders
+Authorization: Bearer {{authToken}}
+
+### 21. Get Order by ID
+GET {{baseUrl}}/orders/{{orderId}}
+Authorization: Bearer {{authToken}}
+
+### 22. Create Order
+POST {{baseUrl}}/orders
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "items": [
+    {
+      "productId": "{{productId}}",
+      "quantity": 2
+    },
+    {
+      "productId": "{{productId2}}",
+      "quantity": 1
+    }
+  ]
+}
+
+### 23. Update Order Status (Admin only)
+PUT {{baseUrl}}/orders/{{orderId}}/status
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "status": "SHIPPED"
+}
+
+### 24. Update Order
+PUT {{baseUrl}}/orders/{{orderId}}
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "items": [
+    {
+      "productId": "{{productId}}",
+      "quantity": 3
+    }
+  ]
+}
+
+### ========================================
+### 🔧 **TESTING VARIABLES**
+### ========================================
+
+### Set these variables in your environment:
+### baseUrl: http://localhost:3001
+### authToken: (JWT token from login)
+### adminToken: (JWT token from admin login)
+### userId: (UUID from created user)
+### productId: (UUID from created product)
+### productId2: (UUID from second product)
+### categoryId: (UUID from created category)
+### orderId: (UUID from created order)
+
+### ========================================
+### 📋 **TESTING CHECKLIST**
+### ========================================
+
+### ✅ Authentication:
+### - Register new user
+### - Login with user
+### - Login with admin
+### - Get profile
+
+### ✅ Users:
+### - Get all users (admin)
+### - Create user (admin)
+### - Get user by ID
+### - Delete user (admin)
+
+### ✅ Products:
+### - Get all products
+### - Get product by ID
+### - Create product (admin)
+### - Update product (admin)
+### - Delete product (admin)
+
+### ✅ Categories:
+### - Get all categories
+### - Get category by ID
+### - Create category (admin)
+### - Update category (admin)
+### - Delete category (admin)
+
+### ✅ Orders:
+### - Get all orders (admin)
+### - Get my orders
+### - Get order by ID
+### - Create order
+### - Update order status (admin)
+### - Update order
+
+### ========================================
+### 🚀 **QUICK TEST COMMANDS**
+### ========================================
+
+### Test with curl (replace tokens and IDs):
+### 
+### 1. Login and get token:
+### curl -X POST http://localhost:3001/auth/login \
+###   -H "Content-Type: application/json" \
+###   -d '{"email":"admin@skateshop.com","password":"password123"}'
+###
+### 2. Test protected route:
+### curl -X GET http://localhost:3001/users \
+###   -H "Authorization: Bearer YOUR_TOKEN_HERE" 
