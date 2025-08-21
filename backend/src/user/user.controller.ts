@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { User } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RoleGuard } from '../auth/role.guard';
@@ -20,5 +29,16 @@ export class UserController {
   @Post()
   create(@Body() createUserDto: CreateUserDto): Promise<User> {
     return this.userService.createUser(createUserDto);
+  }
+
+  @Get(':id')
+  findById(@Param('id', ParseUUIDPipe) id: string): Promise<User> {
+    return this.userService.findById(id);
+  }
+
+  @Roles('ADMIN')
+  @Delete(':id')
+  deleteById(@Param('id', ParseUUIDPipe) id: string): Promise<User> {
+    return this.userService.deleteById(id);
   }
 }
