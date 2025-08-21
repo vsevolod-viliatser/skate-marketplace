@@ -7,24 +7,25 @@ import {
   ParseUUIDPipe,
   Post,
   Put,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { Product } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RoleGuard } from '../auth/role.guard';
 import { Roles } from '../auth/roles.decorator';
+import { PaginationDto } from '../common/dto/pagination.dto';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { ProductService } from './product.service';
-
 @Controller('products')
 @UseGuards(JwtAuthGuard, RoleGuard)
 export class ProductController {
   constructor(private readonly productService: ProductService) {}
 
   @Get()
-  findAll(): Promise<Product[]> {
-    return this.productService.findAll();
+  findAll(@Query() paginationDto: PaginationDto): Promise<Product[]> {
+    return this.productService.findAll(paginationDto);
   }
 
   @Post()
