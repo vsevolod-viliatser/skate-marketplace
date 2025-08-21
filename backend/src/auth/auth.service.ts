@@ -4,13 +4,6 @@ import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from '../user/dto/create-user.dto';
 import { UserService } from '../user/user.service';
 
-interface UserWithPassword {
-  id: string;
-  email: string;
-  password: string;
-  role?: string;
-}
-
 interface UserWithoutPassword {
   id: string;
   email: string;
@@ -24,40 +17,13 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async validateUser(
-    email: string,
-    password: string,
-  ): Promise<UserWithoutPassword | null> {
-    try {
-      const users = await this.userService.findAll();
-      const user = users.find((u: UserWithPassword) => u.email === email);
-
-      if (user && (await this.comparePasswords(password, user.password))) {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { password: _, ...result } = user;
-        return result;
-      }
-      return null;
-    } catch (error) {
-      console.error(error);
-      return null;
+  async login(loginDto: { email: string; password: string }) {
+    const user = await this.validateUser(loginDto.email, loginDto.password);
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials');
     }
-  }
 
-  async login(user: UserWithoutPassword) {
-    const payload = {
-      email: user.email,
-      sub: user.id,
-      role: user.role || 'USER',
-    };
-    return {
-      access_token: await this.jwtService.signAsync(payload),
-      user: {
-        id: user.id,
-        email: user.email,
-        role: user.role || 'USER',
-      },
-    };
+    return this.generateToken(user);
   }
 
   async register(createUserDto: CreateUserDto) {
@@ -73,10 +39,45 @@ export class AuthService {
     if (user) {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { password: _, ...userWithoutPassword } = user;
-      return this.login(userWithoutPassword);
+      return this.generateToken(userWithoutPassword);
     }
 
     throw new UnauthorizedException('Registration failed');
+  }
+
+  private async validateUser(
+    email: string,
+    password: string,
+  ): Promise<UserWithoutPassword | null> {
+    try {
+      const user = await this.userService.findByEmail(email);
+
+      if (user && (await this.comparePasswords(password, user.password))) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { password: _, ...result } = user;
+        return result;
+      }
+      return null;
+    } catch (error) {
+      console.error(error);
+      return null;
+    }
+  }
+
+  private async generateToken(user: UserWithoutPassword) {
+    const payload = {
+      email: user.email,
+      sub: user.id,
+      role: user.role || 'USER',
+    };
+    return {
+      access_token: await this.jwtService.signAsync(payload),
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role || 'USER',
+      },
+    };
   }
 
   private async hashPassword(password: string): Promise<string> {

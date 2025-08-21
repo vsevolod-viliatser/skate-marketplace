@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { Product } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateProductDto } from './dto/create-product.dto';
 
@@ -6,7 +7,7 @@ import { CreateProductDto } from './dto/create-product.dto';
 export class ProductService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll() {
+  async findAll(): Promise<Product[]> {
     return this.prisma.product.findMany({
       include: {
         category: true,
@@ -14,7 +15,7 @@ export class ProductService {
     });
   }
 
-  async createProduct(createProductDto: CreateProductDto) {
+  async createProduct(createProductDto: CreateProductDto): Promise<Product> {
     return this.prisma.product.create({
       data: {
         title: createProductDto.title,

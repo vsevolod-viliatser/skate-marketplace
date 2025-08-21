@@ -9,7 +9,6 @@ import {
 import { CreateUserDto } from '../user/dto/create-user.dto';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
-import { LocalAuthGuard } from './local-auth.guard';
 
 interface AuthenticatedUser {
   id: string;
@@ -25,10 +24,9 @@ interface AuthenticatedRequest extends Request {
 export class AuthController {
   constructor(private authService: AuthService) {}
 
-  @UseGuards(LocalAuthGuard)
   @Post('login')
-  async login(@Request() req: AuthenticatedRequest) {
-    return this.authService.login(req.user);
+  async login(@Body() loginDto: { email: string; password: string }) {
+    return this.authService.login(loginDto);
   }
 
   @Post('register')
