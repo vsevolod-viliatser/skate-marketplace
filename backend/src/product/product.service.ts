@@ -28,7 +28,7 @@ export class ProductService {
         title: createProductDto.title,
         description: createProductDto.description,
         price: createProductDto.price,
-        image: createProductDto.imageUrl,
+        images: createProductDto.imageUrl ? [createProductDto.imageUrl] : [],
         categoryId: createProductDto.categoryId,
       },
       include: {

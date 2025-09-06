@@ -58,15 +58,40 @@ export class OrderService {
   async create(createOrderDto: CreateOrderDto, userId: string): Promise<Order> {
     const { items } = createOrderDto;
 
+    // Calculate order totals
+    const orderItems = await Promise.all(
+      items.map(async (item) => {
+        const product = await this.prisma.product.findUnique({
+          where: { id: item.productId },
+        });
+        if (!product) {
+          throw new NotFoundException(
+            `Product with ID ${item.productId} not found`,
+          );
+        }
+        const unitPrice = product.price;
+        const totalPrice = unitPrice * item.quantity;
+        return {
+          productId: item.productId,
+          quantity: item.quantity,
+          unitPrice,
+          totalPrice,
+        };
+      }),
+    );
+
+    const subtotal = orderItems.reduce((sum, item) => sum + item.totalPrice, 0);
+    const orderNumber = `ORD-${Date.now()}`;
+
     return this.prisma.order.create({
       data: {
         userId,
         status: 'PENDING',
+        orderNumber,
+        subtotal,
+        totalAmount: subtotal,
         items: {
-          create: items.map((item) => ({
-            productId: item.productId,
-            quantity: item.quantity,
-          })),
+          create: orderItems,
         },
       },
       include: {
@@ -82,7 +107,14 @@ export class OrderService {
 
   async updateStatus(
     id: string,
-    status: 'PENDING' | 'PAID' | 'SHIPPED' | 'DELIVERED' | 'CANCELED',
+    status:
+      | 'PENDING'
+      | 'CONFIRMED'
+      | 'PROCESSING'
+      | 'SHIPPED'
+      | 'DELIVERED'
+      | 'CANCELED'
+      | 'REFUNDED',
   ): Promise<Order> {
     await this.findById(id);
 
@@ -111,15 +143,41 @@ export class OrderService {
         where: { orderId: id },
       });
 
+      // Calculate order totals for updated items
+      const orderItems = await Promise.all(
+        items.map(async (item) => {
+          const product = await this.prisma.product.findUnique({
+            where: { id: item.productId },
+          });
+          if (!product) {
+            throw new NotFoundException(
+              `Product with ID ${item.productId} not found`,
+            );
+          }
+          const unitPrice = product.price;
+          const totalPrice = unitPrice * item.quantity;
+          return {
+            productId: item.productId,
+            quantity: item.quantity,
+            unitPrice,
+            totalPrice,
+          };
+        }),
+      );
+
+      const subtotal = orderItems.reduce(
+        (sum, item) => sum + item.totalPrice,
+        0,
+      );
+
       return this.prisma.order.update({
         where: { id },
         data: {
           ...updateData,
+          subtotal,
+          totalAmount: subtotal,
           items: {
-            create: items.map((item) => ({
-              productId: item.productId,
-              quantity: item.quantity,
-            })),
+            create: orderItems,
           },
         },
         include: {

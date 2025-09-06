@@ -8,6 +8,10 @@ interface UserWithoutPassword {
   id: string;
   email: string;
   role?: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  avatar?: string | null;
+  isActive?: boolean;
 }
 
 @Injectable()
@@ -23,18 +27,15 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
+    if (!user.isActive) {
+      throw new UnauthorizedException('Account is deactivated');
+    }
+
     return this.generateToken(user);
   }
 
   async register(createUserDto: CreateUserDto) {
-    const hashedPassword = await this.hashPassword(createUserDto.password);
-
-    const userData = {
-      email: createUserDto.email,
-      password: hashedPassword,
-    };
-
-    const user = await this.userService.createUser(userData);
+    const user = await this.userService.createUser(createUserDto);
 
     if (user) {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -76,6 +77,10 @@ export class AuthService {
         id: user.id,
         email: user.email,
         role: user.role || 'USER',
+        firstName: user.firstName,
+        lastName: user.lastName,
+        avatar: user.avatar,
+        isActive: user.isActive,
       },
     };
   }

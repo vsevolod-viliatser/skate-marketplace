@@ -29,7 +29,7 @@ export class OrderController {
   }
 
   @Get('my-orders')
-  findMyOrders(@Request() req): Promise<Order[]> {
+  findMyOrders(@Request() req: { user: { id: string } }): Promise<Order[]> {
     return this.orderService.findByUserId(req.user.id);
   }
 
@@ -41,7 +41,7 @@ export class OrderController {
   @Post()
   create(
     @Body() createOrderDto: CreateOrderDto,
-    @Request() req,
+    @Request() req: { user: { id: string } },
   ): Promise<Order> {
     return this.orderService.create(createOrderDto, req.user.id);
   }
@@ -51,7 +51,14 @@ export class OrderController {
   updateStatus(
     @Param('id', ParseUUIDPipe) id: string,
     @Body('status')
-    status: 'PENDING' | 'PAID' | 'SHIPPED' | 'DELIVERED' | 'CANCELED',
+    status:
+      | 'PENDING'
+      | 'CONFIRMED'
+      | 'PROCESSING'
+      | 'SHIPPED'
+      | 'DELIVERED'
+      | 'CANCELED'
+      | 'REFUNDED',
   ): Promise<Order> {
     return this.orderService.updateStatus(id, status);
   }

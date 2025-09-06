@@ -1,69 +1,231 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-generator client {
-  provider = "prisma-client-js"
+model User {
+  id          String           @id @default(uuid())
+  email       String           @unique
+  password    String
+  role        Role             @default(USER)
+  createdAt   DateTime         @default(now())
+  avatar      String?
+  dateOfBirth DateTime?
+  firstName   String?
+  isActive    Boolean          @default(true)
+  lastName    String?
+  phone       String?
+  updatedAt   DateTime         @updatedAt
+  addresses   Address[]
+  orders      Order[]
+  reviews     Review[]
+  preferences UserPreferences?
 }
 
-model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String
-  role      Role     @default(USER)
-  createdAt DateTime @default(now())
+model Address {
+  id             String      @id @default(uuid())
+  userId         String
+  type           AddressType @default(SHIPPING)
+  firstName      String
+  lastName       String
+  company        String?
+  addressLine1   String
+  addressLine2   String?
+  city           String
+  state          String
+  postalCode     String
+  country        String      @default("US")
+  phone          String?
+  isDefault      Boolean     @default(false)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  user           User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  billingOrders  Order[]     @relation("BillingAddress")
+  shippingOrders Order[]     @relation("ShippingAddress")
+}
 
-  orders Order[]
+model UserPreferences {
+  id                 String     @id @default(uuid())
+  userId             String     @unique
+  preferredDeckSize  String?
+  preferredBrands    String[]
+  skillLevel         SkillLevel @default(BEGINNER)
+  ridingStyle        String[]
+  emailNotifications Boolean    @default(true)
+  smsNotifications   Boolean    @default(false)
+  pushNotifications  Boolean    @default(true)
+  marketingEmails    Boolean    @default(true)
+  currency           String     @default("USD")
+  measurementUnit    String     @default("IMPERIAL")
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
+  user               User       @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Product {
-  id          String   @id @default(uuid())
-  title       String
-  description String?
-  price       Float
-  image       String?
-  category    Category @relation(fields: [categoryId], references: [id])
-  categoryId  String
+  id                String           @id @default(uuid())
+  title             String
+  description       String?
+  price             Float
+  categoryId        String
+  createdAt         DateTime         @default(now())
+  brand             String?
+  dimensions        String?
+  images            String[]
+  isActive          Boolean          @default(true)
+  lowStockThreshold Int              @default(5)
+  sku               String?          @unique
+  stockQuantity     Int              @default(0)
+  tags              String[]
+  updatedAt         DateTime         @updatedAt
+  weight            Float?
+  orderItems        OrderItem[]
+  category          Category         @relation(fields: [categoryId], references: [id])
+  variants          ProductVariant[]
+  reviews           Review[]
+}
 
-  orderItems OrderItem[]
-  createdAt  DateTime    @default(now())
+model ProductVariant {
+  id              String   @id @default(uuid())
+  productId       String
+  name            String
+  type            String
+  value           String
+  priceAdjustment Float    @default(0)
+  stockQuantity   Int      @default(0)
+  sku             String?  @unique
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model Review {
+  id                 String   @id @default(uuid())
+  userId             String
+  productId          String
+  rating             Int
+  title              String?
+  comment            String?
+  images             String[]
+  isVerifiedPurchase Boolean  @default(false)
+  isApproved         Boolean  @default(false)
+  helpfulVotes       Int      @default(0)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  product            Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
 }
 
 model Category {
-  id       String    @id @default(uuid())
-  name     String    @unique
-  products Product[]
+  id          String     @id @default(uuid())
+  name        String     @unique
+  createdAt   DateTime   @default(now())
+  description String?
+  image       String?
+  parentId    String?
+  updatedAt   DateTime   @updatedAt
+  parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryHierarchy")
+  products    Product[]
 }
 
 model Order {
-  id        String      @id @default(uuid())
-  user      User        @relation(fields: [userId], references: [id])
-  userId    String
-  status    OrderStatus @default(PENDING)
-  createdAt DateTime    @default(now())
-
-  items OrderItem[]
+  id                    String        @id @default(uuid())
+  userId                String
+  status                OrderStatus   @default(PENDING)
+  createdAt             DateTime      @default(now())
+  billingAddressId      String?
+  discountAmount        Float         @default(0)
+  estimatedDelivery     DateTime?
+  notes                 String?
+  orderNumber           String        @unique
+  paymentMethod         String?
+  paymentStatus         PaymentStatus @default(PENDING)
+  shippingAddressId     String?
+  shippingAmount        Float         @default(0)
+  shippingMethod        String?
+  stripePaymentIntentId String?
+  subtotal              Float
+  taxAmount             Float         @default(0)
+  totalAmount           Float
+  trackingNumber        String?
+  updatedAt             DateTime      @updatedAt
+  billingAddress        Address?      @relation("BillingAddress", fields: [billingAddressId], references: [id])
+  shippingAddress       Address?      @relation("ShippingAddress", fields: [shippingAddressId], references: [id])
+  user                  User          @relation(fields: [userId], references: [id])
+  items                 OrderItem[]
+  payments              Payment[]
 }
 
 model OrderItem {
-  id        String  @id @default(uuid())
-  order     Order   @relation(fields: [orderId], references: [id])
-  orderId   String
-  product   Product @relation(fields: [productId], references: [id])
-  productId String
-  quantity  Int     @default(1)
+  id          String   @id @default(uuid())
+  orderId     String
+  productId   String
+  quantity    Int      @default(1)
+  createdAt   DateTime @default(now())
+  totalPrice  Float
+  unitPrice   Float
+  variantData String?
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product     Product  @relation(fields: [productId], references: [id])
+}
+
+model Payment {
+  id                    String        @id @default(uuid())
+  orderId               String
+  amount                Float
+  currency              String        @default("USD")
+  status                PaymentStatus @default(PENDING)
+  paymentMethod         String
+  stripePaymentIntentId String?       @unique
+  stripeChargeId        String?       @unique
+  last4                 String?
+  brand                 String?
+  processedAt           DateTime?
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+  order                 Order         @relation(fields: [orderId], references: [id])
 }
 
 enum Role {
   USER
   ADMIN
+  VENDOR
 }
 
 enum OrderStatus {
   PENDING
-  PAID
+  CONFIRMED
+  PROCESSING
   SHIPPED
   DELIVERED
   CANCELED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  SUCCEEDED
+  FAILED
+  CANCELED
+  REFUNDED
+}
+
+enum AddressType {
+  SHIPPING
+  BILLING
+}
+
+enum SkillLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  PROFESSIONAL
 }

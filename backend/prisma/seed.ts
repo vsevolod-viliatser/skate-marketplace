@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { OrderStatus, PrismaClient } from '@prisma/client';
 import * as argon2 from 'argon2';
 
 const prisma = new PrismaClient();
@@ -104,10 +104,11 @@ async function main() {
           description:
             'High-quality 8.0" skateboard deck made from 7-ply maple. Perfect for street and park skating.',
           price: 59.99,
-          image:
+          images: [
             'https://images.unsplash.com/photo-1572776685600-cf276d3c3b32?w=400',
+          ],
           categoryId: categories[0].id, // Decks
-        },
+        } as any,
       }),
       prisma.product.create({
         data: {
@@ -115,10 +116,11 @@ async function main() {
           description:
             'Lightweight aluminum trucks with perfect turning radius. Compatible with most deck sizes.',
           price: 45.99,
-          image:
+          images: [
             'https://images.unsplash.com/photo-1572776685600-cf276d3c3b32?w=400',
+          ],
           categoryId: categories[1].id, // Trucks
-        },
+        } as any,
       }),
       prisma.product.create({
         data: {
@@ -126,10 +128,11 @@ async function main() {
           description:
             'ABEC-7 rated bearings for maximum speed and durability. Includes 8 bearings.',
           price: 19.99,
-          image:
+          images: [
             'https://images.unsplash.com/photo-1572776685600-cf276d3c3b32?w=400',
+          ],
           categoryId: categories[3].id, // Bearings
-        },
+        } as any,
       }),
       prisma.product.create({
         data: {
@@ -137,10 +140,11 @@ async function main() {
           description:
             'Black grip tape with excellent traction for all skate styles. 9" x 33" sheet.',
           price: 12.99,
-          image:
+          images: [
             'https://images.unsplash.com/photo-1572776685600-cf276d3c3b32?w=400',
+          ],
           categoryId: categories[4].id, // Grip Tape
-        },
+        } as any,
       }),
       prisma.product.create({
         data: {
@@ -148,10 +152,11 @@ async function main() {
           description:
             '54mm wheels perfect for cruising and street skating. Set of 4 wheels.',
           price: 34.99,
-          image:
+          images: [
             'https://images.unsplash.com/photo-1572776685600-cf276d3c3b32?w=400',
+          ],
           categoryId: categories[2].id, // Wheels
-        },
+        } as any,
       }),
       prisma.product.create({
         data: {
@@ -159,10 +164,11 @@ async function main() {
           description:
             'Complete hardware kit including 8 bolts and 8 nuts. 1" length, black finish.',
           price: 8.99,
-          image:
+          images: [
             'https://images.unsplash.com/photo-1572776685600-cf276d3c3b32?w=400',
+          ],
           categoryId: categories[5].id, // Hardware
-        },
+        } as any,
       }),
       prisma.product.create({
         data: {
@@ -170,10 +176,11 @@ async function main() {
           description:
             'Comfortable cotton t-shirt with skate design. Available in multiple sizes.',
           price: 24.99,
-          image:
+          images: [
             'https://images.unsplash.com/photo-1572776685600-cf276d3c3b32?w=400',
+          ],
           categoryId: categories[6].id, // Apparel
-        },
+        } as any,
       }),
     ]);
 
@@ -184,56 +191,77 @@ async function main() {
       prisma.order.create({
         data: {
           userId: users[1].id, // user@skateshop.com
-          status: 'PAID',
+          status: 'CONFIRMED' as OrderStatus,
+          orderNumber: 'ORD-001',
+          subtotal: 105.98,
+          totalAmount: 105.98,
           items: {
             create: [
               {
                 productId: products[0].id, // Pro Skateboard Deck
                 quantity: 1,
-              },
+                unitPrice: 59.99,
+                totalPrice: 59.99,
+              } as any,
               {
                 productId: products[1].id, // Aluminum Trucks
                 quantity: 1,
-              },
+                unitPrice: 45.99,
+                totalPrice: 45.99,
+              } as any,
             ],
           },
-        },
+        } as any,
       }),
       prisma.order.create({
         data: {
           userId: users[2].id, // john@skateshop.com
-          status: 'PENDING',
+          status: 'PENDING' as OrderStatus,
+          orderNumber: 'ORD-002',
+          subtotal: 74.97,
+          totalAmount: 74.97,
           items: {
             create: [
               {
                 productId: products[2].id, // Bearings
                 quantity: 2,
-              },
+                unitPrice: 19.99,
+                totalPrice: 39.98,
+              } as any,
               {
                 productId: products[4].id, // Wheels
                 quantity: 1,
-              },
+                unitPrice: 34.99,
+                totalPrice: 34.99,
+              } as any,
             ],
           },
-        },
+        } as any,
       }),
       prisma.order.create({
         data: {
           userId: users[1].id, // user@skateshop.com
-          status: 'SHIPPED',
+          status: 'SHIPPED' as OrderStatus,
+          orderNumber: 'ORD-003',
+          subtotal: 21.98,
+          totalAmount: 21.98,
           items: {
             create: [
               {
                 productId: products[3].id, // Grip Tape
                 quantity: 1,
-              },
+                unitPrice: 12.99,
+                totalPrice: 12.99,
+              } as any,
               {
                 productId: products[5].id, // Hardware
                 quantity: 1,
-              },
+                unitPrice: 8.99,
+                totalPrice: 8.99,
+              } as any,
             ],
           },
-        },
+        } as any,
       }),
     ]);
 
@@ -267,5 +295,5 @@ main()
     process.exit(1);
   })
   .finally(() => {
-    prisma.$disconnect();
+    void prisma.$disconnect();
   });
