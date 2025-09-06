@@ -1,6 +1,8 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
+import { LoggerService } from '../common/services/logger.service';
 import { CreateUserDto } from '../user/dto/create-user.dto';
 import { UserService } from '../user/user.service';
 
@@ -19,6 +21,8 @@ export class AuthService {
   constructor(
     private userService: UserService,
     private jwtService: JwtService,
+    private configService: ConfigService,
+    private logger: LoggerService,
   ) {}
 
   async login(loginDto: { email: string; password: string }) {
@@ -60,7 +64,11 @@ export class AuthService {
       }
       return null;
     } catch (error) {
-      console.error(error);
+      this.logger.error(
+        `Failed to validate user: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        error instanceof Error ? error.stack : undefined,
+        'AuthService',
+      );
       return null;
     }
   }
@@ -101,7 +109,11 @@ export class AuthService {
     try {
       return await argon2.verify(hashedPassword, plainPassword);
     } catch (error) {
-      console.error(error);
+      this.logger.error(
+        `Failed to compare passwords: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        error instanceof Error ? error.stack : undefined,
+        'AuthService',
+      );
       return false;
     }
   }
